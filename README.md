@@ -1,4 +1,4 @@
-c# meeting #1 - my-armageddon-project-1
+# meeting #1 - my-armageddon-project-1
 ### Group Leader: Omar Fleming
 ### Team Leader: Larry Harris
 ### Date: 01-04-25 (Sunday)
@@ -78,7 +78,7 @@ ______
     - note - recursive error when you re-upload this build you will get an error:
     - "You can't create this secret because a secret with this name is already scheduled for deletion." AWS keeps the secret by default for 30 days after you destroy. Therefore run this code to delete now after each terraform destroy
 
->aws secretsmanager delete-secret --secret-id bos/rds/mysql --force-delete-without-recovery
+>>aws secretsmanager delete-secret --secret-id bos/rds/mysql --force-delete-without-recovery
 
 - #### changes from week 1 files:
   - variables.tf - line 40 verify the correct AMI #
@@ -125,25 +125,28 @@ Verified flow concept
 
 screen capture (sc)<sup>1</sup>![first draft diagram](./screen-captures/lab1a-diagram.png)
 
-------
+-----
 
-#### A. Infrastructure proof
+A. Infrastructure Proof
+  1) EC2 instance running and reachable over HTTP
+   
+sc<sup>0</sup>![RDS-SG-inbound](./screen-captures/0.png)
 
-  1. In RDS console, copy the endpoint (you won’t paste it into app because Secrets Manager provides host)
+  2) RDS MySQL instance in the same VPC
 
-  2. EC2 instance running and reachable over HTTP
-     - go to your browser add http:// and and your public IP
-     - shows RDS MySQL in the same VPC 
-  3. Security group rule showing:  
-     - RDS inbound TCP 3306  
-     - Source = EC2 security group (not 0.0.0.0/0)  
-     - IAM role attached to EC2 allowing Secrets Manager access
+sc<sup>3</sup>![3 - init](./screen-captures/3.png)
+   
+  3) Security group rule showing:
+       - RDS inbound TCP 3306
+      - Source = EC2 security group (not 0.0.0.0/0)  
+  
+  IAM role attached to EC2 allowing Secrets Manager access
+
+sc<sup>00</sup>![IAM role attached](./screen-captures/00.png)
+
+Screenshot of: RDS SG inbound rule using source = sg-ec2-lab EC2 role attached 
 
 sc<sup>1</sup>![RDS-SG-inbound](./screen-captures/1.png)
-
-sc<sup>2</sup>![2](./screen-captures/2.png)
-
-------
 
 ### B. Application Proof
   1. Successful database initialization
@@ -153,16 +156,17 @@ sc<sup>2</sup>![2](./screen-captures/2.png)
      - RDS SG inbound rule using source = sg-ec2-lab
      - EC2 role attached
 
-- http://<EC2_PUBLIC_IP>/ini
-- http://<EC2_PUBLIC_IP>/add?note=first_note
+- http://<EC2_PUBLIC_IP>/init
 
 sc<sup>3</sup>![3 - init](./screen-captures/3.png)
 
-sc<sup>4</sup>![4](./screen-captures/4-note-1.png)
+- http://<EC2_PUBLIC_IP>/add?note=first_note
+
+sc<sup>4</sup>![4 - add?note=first_note](./screen-captures/4-note-1.png)
 
 - http://<EC2_PUBLIC_IP>/list
 
-sc<sup>7</sup>![7](./screen-captures/7-list.png)
+sc<sup>7</sup>![7 - list](./screen-captures/7-list.png)
 
   - If /init hangs or errors, it’s almost always:
     RDS SG inbound not allowing from EC2 SG on 3306
@@ -172,64 +176,71 @@ sc<sup>7</sup>![7](./screen-captures/7-list.png)
 
 - list output showing at least 3 notes
 
-sc<sup>4</sup>![4](./screen-captures/4-note-1.png)
-sc<sup>5</sup>![5](./screen-captures/5-note-2.png)
-sc<sup>6</sup>![6](./screen-captures/6-note-3.png)
+sc<sup>5</sup>![5 - add?note=2nd_note](./screen-captures/5-note-2.png)
+
+sc<sup>6</sup>![6 - add?note=3rd_note](./screen-captures/6-note-3.png)
 
 -----
 ### C. Verification Evidence
+- CLI output proving connectivity and configuration
+- Browser output showing database data
+- Copy and paste this command your vscode terminal 
 
-sc<sup>10</sup>![10](./screen-captures/10.png)
+>>>mysql -h bos-rds01.cmls2wy44n17.us-east-1.rds.amazonaws.com -P 3306 -u admiral -p 
 
-------
+- (you can get this from the command line in vscode in the output section)
 
-#### go to instances > connect > Session manager (because its in a private subnet you can't access this though public internet) > connect
-
-sc<sup>8</sup>![8](./screen-captures/8.png)
-
-sc<sup>9</sup>![9](./screen-captures/9.png)
-
-- copy and paste this command in the command line 
-- mysql -h bos-rds01.cmls2wy44n17.us-east-1.rds.amazonaws.com -P 3306 -u admiral -p (you can get this from the command line in vscode in the output section)
+sc<sup>10</sup>![10 - CLI proof and databas data](./screen-captures/10.png)
 
 ------
-## 6. Technical Verification Using AWS CLI (Mandatory)
-You are expected to prove your work using the CLI — not screenshots alone.
+
+Connect to AWS CLI
+
+- go to instances > connect > Session manager (because its in a private subnet you can't access this though public internet) > connect
+
+sc<sup>8</sup>![8 - connect to CLI 1](./screen-captures/8.png)
+
+sc<sup>9</sup>![9 - connect to CLI 2](./screen-captures/9.png)
+
+
+------
+## 6. Technical Verification 
 
 ### 6.1 Verify EC2 Instance
+run this code in terminal
 
->aws ec2 describe-instances --filters "Name=tag:Name,Values=bos-ec201" --query "Reservations[].Instances[].{InstanceId:InstanceId,State:State.Name}"
+>>>aws ec2 describe-instances --filters "Name=tag:Name,Values=bos-ec201" --query "Reservations[].Instances[].{InstanceId:InstanceId,State:State.Name}"
 
 #### Expected:
   - Instance ID returned  
   - Instance state = running
 
-sc<sup>17</sup>![5](./screen-captures/17.png)
+sc<sup>17</sup>![EC2 id & state running](./screen-captures/17.png)
 
 
 ### 6.2 Verify IAM Role Attached to EC2
->aws ec2 describe-instances \
+>>>aws ec2 describe-instances \
   --instance-ids <INSTANCE_ID> \
   --query "Reservations[].Instances[].IamInstanceProfile.Arn"
 
 #### Expected:
 - ARN of an IAM instance profile (not null)
 
-sc<sup>18</sup>![5](./screen-captures/18.png)
+sc<sup>18</sup>![ARN of an IAM](./screen-captures/18.png)
 
 
 ### 6.3 Verify RDS Instance State
->aws rds describe-db-instances \
+>>>aws rds describe-db-instances \
   --db-instance-identifier bos-rds01 \
   --query "DBInstances[].DBInstanceStatus"
 
 #### Expected 
   Available
 
-sc<sup>19</sup>![5](./screen-captures/19.png)
+sc<sup>19</sup>![Available](./screen-captures/19.png)
 
 ### 6.4 Verify RDS Endpoint (Connectivity Target)
->aws rds describe-db-instances \
+>>>aws rds describe-db-instances \
   --db-instance-identifier bos-rds01 \
   --query "DBInstances[].Endpoint"
 
@@ -237,22 +248,24 @@ sc<sup>19</sup>![5](./screen-captures/19.png)
 - Endpoint address
 - Port 3306
 
-sc<sup>20</sup>![5](./screen-captures/20.png)
+sc<sup>20</sup>![Endpoint address and port 3306](./screen-captures/20.png)
 
+----   
 ### 6.5 (works)
 
->aws ec2 describe-security-groups --filters "Name=tag:Name,Values=bos-rds-sg01" --query "SecurityGroups[].IpPermissions"
-            
+>>>aws ec2 describe-security-groups --filters "Name=tag:Name,Values=bos-rds-sg01" --query "SecurityGroups[].IpPermissions"
+         
 #### Expected: 
 - TCP port 3306 
 - Source referencing EC2 security group ID, not CIDR
 
-sc<sup>21</sup>![5](./screen-captures/21.png)
-  
+sc<sup>21</sup>![TCP Port and EC2 security group ID](./screen-captures/21.png)
+
+----  
 ### 6.6 (run command inside ec2 sessions manager) (works)
 SSH into EC2 and run:
 
->>aws secretsmanager get-secret-value --secret-id bos/rds/mysql
+>>>aws secretsmanager get-secret-value --secret-id bos/rds/mysql
 expected result
                 
                 
@@ -264,24 +277,28 @@ expected result
   - port
         
 
-sc<sup>22</sup>![5](./screen-captures/22.png)
+sc<sup>22</sup>![JSON containing info](./screen-captures/22.png)
+
+---------
 
 ### 6.7 Verify Database Connectivity (From EC2)
 Install MySQL client (temporary validation):
 sudo dnf install -y mysql
 
-#### Connect:
->>mysql -h <RDS_ENDPOINT> -u admin -p
+#### Connect: this next command 6.7 was aready added into the user data therefore no need to run now. See line 4 in user data
+>>>mysql -h <RDS_ENDPOINT> -u admin -p
 
-#### to get the rds endpoint:
-- go to council and connect instance. Code must be run in the AWS terminal (connect > session manager > connect)
-- go to council > rds > databases > DB identifier > connectivity and security - then copy endpoint paste in code. Enter password Broth3rH00d hit return
+  - to get the rds endpoint:
+  - go to consol and connect instance. Code must be run in the AWS terminal (connect > session manager > connect)
+  - go to consol > rds > databases > DB identifier > connectivity and security - then copy endpoint paste in code. Enter password Broth3rH00d hit return
+
+sc<sup>23</sup>![MySQL](./screen-captures/23.png)
 
 Expected:
 - Successful login
 - No timeout or connection refused errors
 
-sc<sup>23</sup>![5](./screen-captures/23.png)
+------
 
 ### 1. Short answers:  
 
@@ -300,8 +317,7 @@ sc<sup>23</sup>![5](./screen-captures/23.png)
 ### Team Leader: Larry Harris
 ### Date: 01-06-25 (Tuesday)
 ### Time: 8:00pm -  11:15pm est.
-----
-----
+---------
 ### Members present: 
 - Larry Harris
 - Dennis Shaw
@@ -313,14 +329,16 @@ sc<sup>23</sup>![5](./screen-captures/23.png)
 - Torray
 - Tre Bradshaw
 - Ted Clayton
-______
+-------------
 
 
-# Fixes:
+### Fixes:
 
-- inline_policy.json  
+inline_policy.json  
 
 <sup>15</sup>![json fix](./screen-captures/15-json-fix.png)
+
+ec2.tf
 
 - line 19 create an IAM policy referencing the json from our folder
 - comment out line 26-29 in ec2.tf
@@ -335,9 +353,123 @@ resource "aws_iam_role_policy" "bos_ec2_secrets_access" {
 
 <sup>16</sup>![json fix](./screen-captures/16.png)
 
-----
-
 - make sure everyone is caught up
 - go over all deliverables so that everyone can take screenshots
+----------
 
-Lab 1a complete!
+# Lab 1a complete!
+
+# Lab 1b
+01-08-25 
+quick meeting with Larry with some updates for Lab 1b
+
+### Add files:
+  
+- ### lambda_ir_reporter.zip
+  - the zip will run on initializing
+----
+- ### lambda (folder)
+  - copy and add the two files from the Lambda folder in Larry's repo
+    1. claude.py
+    2. handler.py
+----
+- ### 1a_user_data.sh 
+  - replaced current contents with Larry's
+----
+- ### bedrock_autoreport.tf
+----
+- ### cloudwatch.tf folder copy and past code from Larry
+----
+- ### go to output.tf file
+  - un Toggle Line Comment last 2 output blocks
+----
+- ### sns_topic.tf 
+  - copy from Larry's repo
+----
+
+
+****** note: will start testing tomorrow, and going through familiarizng myself with the deliverables. 
+- when I see "lab" in the commands I have to change to bos_ec01
+
+-----
+----
+Friday 01-09-25  
+5pm - 8pm  
+caught up more members
+
+------
+
+------
+
+# Final Check for lab 1a:
+Saturday 01-10-25
+re:
+- https://github.com/DennistonShaw/armageddon/blob/main/SEIR_Foundations/LAB1/1a_final_check.txt
+
+1) From your local Terminal we are changing permissions for the following files to run (metadata checks; role attach + secret exists)
+
+>>>     chmod +x gate_secrets_and_role.sh
+
+>>>     chmod +x gate_network_db.sh
+
+>>>     chmod +x run_all_gates.sh
+
+sc<sup>24-1</sup>![24](./screen-captures/24-1.png)
+
+>>>     REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 SECRET_ID=my-db-secret ./gate_secrets_and_role.sh
+
+- change_instance ID and Secret_ID and run
+- these are my personal IDs (get yours from the console or terminal)
+  - instance ID: i-0d5a37100e335070c
+  - secrets ID: bos/rds/mysql\
+  - DB_ID: bos-rds01
+
+sc<sup>24-2</sup>![24](./screen-captures/24-2.png)
+
+---------
+
+### 1) Basic: verify RDS isn’t public + SG-to-SG rule exists
+
+>>>    REGION=us-east-1 INSTANCE_ID=i-0123456789abcdef0 DB_ID=mydb01 ./gate_network_db.sh
+
+ID Changes:
+  - instance ID: i-0d5a37100e335070c
+  - secrets ID: bos/rds/mysql\
+  - DB_ID: bos-rds01
+
+sc<sup>24-4</sup>![24](./screen-captures/24-4.png)
+
+----
+
+### 2) Basic: verify RDS isn’t public + SG-to-SG rule exists
+Strict: also verify DB subnets are private (no IGW route)
+
+>>>REGION=us-east-1 \
+INSTANCE_ID=i-0123456789abcdef0 \
+SECRET_ID=my-db-secret \
+DB_ID=mydb01 \
+./run_all_gates.sh
+
+ID Changes:
+  - instance ID: i-0d5a37100e335070c
+  - secrets ID: bos/rds/mysql\
+  - DB_ID: bos-rds01
+
+sc<sup>24-5</sup>![24](./screen-captures/24-5.png)
+
+----
+
+## Strict options (rotation + private subnet check)
+
+### Expected Output:
+Files created:
+- gate_secrets_and_role.json
+- gate_network_db.json
+- gate_result.json ✅ combined summary
+
+Exit code: you will see these in the Python (folder) > gate_result.json
+- 0 = ready to merge / ready to grade
+- 2 = fail (exact reasons provided)
+- 1 = error (missing env/tools/scripts)
+
+sc<sup>24-6</sup>![24](./screen-captures/24-6.png)
