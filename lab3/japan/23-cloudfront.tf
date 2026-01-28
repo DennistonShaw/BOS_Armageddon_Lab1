@@ -79,10 +79,7 @@ resource "aws_cloudfront_distribution" "edo_cf01" {
   web_acl_id = aws_wafv2_web_acl.edo_cf_waf01.arn
 
   # TODO: students set aliases for chewbacca-growl.com and app.chewbacca-growl.com
-  aliases = [
-    var.domain_name,
-    "${var.app_subdomain}.${var.domain_name}"
-  ]
+  aliases = ["larrryharrisaws.com", "www.larrryharrisaws.com", "app.larrryharrisaws.com"]
 
   # TODO: students must use ACM cert in us-east-1 for CloudFront
   viewer_certificate {

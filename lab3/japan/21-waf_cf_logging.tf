@@ -81,18 +81,18 @@ resource "aws_cloudwatch_log_group" "edo_waf_log_group01" {
 }
 
 # Explanation: This wire connects the shield generator to the black box—WAF -> CloudWatch Logs.
-resource "aws_wafv2_web_acl_logging_configuration" "edo_waf_logging01" {
-  count = var.enable_waf && var.waf_log_destination == "cloudwatch" ? 1 : 0
+# resource "aws_wafv2_web_acl_logging_configuration" "edo_waf_logging01" {
+#   count = var.enable_waf && var.waf_log_destination == "cloudwatch" ? 1 : 0
 
-  resource_arn = aws_wafv2_web_acl.edo_cf_waf01.arn
-  log_destination_configs = [
-    aws_cloudwatch_log_group.edo_waf_log_group01[0].arn
-  ]
+#   resource_arn = "arn:aws:wafv2:us-east-1:891377135193:regional/webacl/edo-cf-waf01/dd7c5a68-8145-4410-9e51-37f23d9b8303"
+#   log_destination_configs = [
+#     aws_cloudwatch_log_group.edo_waf_log_group01[0].arn
+#   ]
 
-  # TODO: Students can add redacted_fields (authorization headers, cookies, etc.) as a stretch goal.
-  # redacted_fields { ... }
+#   # TODO: Students can add redacted_fields (authorization headers, cookies, etc.) as a stretch goal.
+#   # redacted_fields { ... }
 
-  depends_on = [aws_wafv2_web_acl.edo_cf_waf01]
-}
+#   depends_on = [aws_wafv2_web_acl.edo_cf_waf01]
+# }
 
 ###Lab 2

@@ -15,6 +15,16 @@ provider "aws" {
   region = "sa-east-1"
 }
 
+provider "aws" {
+  alias = "ap-northeast-1"
+  region = "ap-northeast-1"
+}
+
+provider "aws" {
+  alias = "us-east-1"
+  region = "us-east-1"
+}
+
 terraform {
   required_version = ">= 1.5.0"
 

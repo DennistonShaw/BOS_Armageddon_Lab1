@@ -4,6 +4,7 @@
 
 # Explanation: The ALB is your public customs checkpoint — it speaks TLS and forwards to private targets.
 resource "aws_lb" "edo_alb01" {
+  provider = aws.ap-northeast-1
   name               = "${var.project_name}-alb01"
   load_balancer_type = "application"
   internal           = false
